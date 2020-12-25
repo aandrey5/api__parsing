@@ -1,0 +1,33 @@
+import scrapy
+from scrapy.http import HtmlResponse
+from jobparser.items import JobparserItem
+
+
+class LabirintruSpider(scrapy.Spider):
+    name = 'labirintru'
+    allowed_domains = ['labirint.ru']
+    start_urls = ['https://www.labirint.ru/search/business/?stype=0']
+
+    def parse(self, response: HtmlResponse):
+
+        labirint_links = response.xpath("//div[@class= 'product-cover']/a/@href").extract()
+        for link in labirint_links:
+            #link_corr = self.allowed_domains[0] + link
+            yield response.follow(link, callback=self.labirint_parse)
+        next_page = response.xpath("//a[@class = 'pagination-next__text']/@href").extract_first()
+        if next_page:
+            yield response.follow(next_page, self.parse)
+
+
+        print()
+    def labirint_parse(self, response: HtmlResponse):
+        labirint_name = response.xpath('//h1/text()').extract_first()
+        labirint_url = response.url
+        labirint_auth = response.xpath("//div[@class = 'authors']/a/text()").extract()
+        labirint_price_main = response.xpath("//span[@class = 'buying-priceold-val-number']/text()").extract_first()
+        labirint_price_discount = response.xpath("//span[@class = 'buying-pricenew-val-number']/text()").extract_first()
+        labirint_price_rate = response.xpath("//div[@id = 'rate']/text()").extract_first()
+
+        yield JobparserItem(labirint_name=labirint_name, labirint_url=labirint_url, labirint_auth=labirint_auth, labirint_price_main=labirint_price_main,
+                            labirint_price_discount=labirint_price_discount,labirint_price_rate=labirint_price_rate)
+        print()
