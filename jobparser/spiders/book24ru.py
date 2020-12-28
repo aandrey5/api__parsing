@@ -1,6 +1,7 @@
 import scrapy
 from scrapy.http import HtmlResponse
 from jobparser.items import JobparserItem
+from scrapy.loader import ItemLoader
 
 
 class Book24ruSpider(scrapy.Spider):
@@ -20,14 +21,29 @@ class Book24ruSpider(scrapy.Spider):
 
 
     def book24_parse(self, response: HtmlResponse):
-        book_name = response.xpath("//h1/text()").extract_first()
-        book_url = response.url
-        book_auth = response.xpath("//span[@class = 'item-tab__chars-value']/a[@itemprop='author']/text()").extract()
-        book_price_main = response.xpath("//div[@class = 'item-actions__price-old']/text()").extract_first()
-        book_price_discount = response.xpath("//b[@itemprop = 'price']/text()").extract_first()
-        book_rate = response.xpath("//span[@class = 'rating__rate-value']/text()").extract_first()
+        loader = ItemLoader(item=JobparserItem(), response=response)
+        loader.add_xpath('name', "//h1/text()")
+        loader.add_value('url', response.url)
+        loader.add_xpath('auth', "//span[@class = 'item-tab__chars-value']/a[@itemprop='author']/text()")
+        loader.add_xpath('price_main', "//div[@class = 'item-actions__price-old']/text()")
+        loader.add_xpath('price_discount', "//b[@itemprop = 'price']/text()")
+        loader.add_xpath('rate', "//span[@class = 'rating__rate-value']/text()")
 
-        yield JobparserItem(book_name=book_name, book_url=book_url, book_auth=book_auth, book_price_main=book_price_main,
-                            book_price_discount=book_price_discount, book_rate=book_rate)
+        yield loader.load_item()
+
         print()
+
+
+
+
+        #book24_name = response.xpath("//h1/text()").extract_first()
+        # book24_url = response.url
+        # book24_auth = response.xpath("//span[@class = 'item-tab__chars-value']/a[@itemprop='author']/text()").extract()
+        # book24_price_main = response.xpath("//div[@class = 'item-actions__price-old']/text()").extract_first()
+        # book24_price_discount = response.xpath("//b[@itemprop = 'price']/text()").extract_first()
+        # book24_rate = response.xpath("//span[@class = 'rating__rate-value']/text()").extract_first()
+
+        # yield JobparserItem(name=book24_name, url=book24_url, auth=book24_auth, price_main=book24_price_main,
+                            #price_discount=book24_price_discount, price_rate=book24_rate)
+
 
